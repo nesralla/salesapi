@@ -1,0 +1,1 @@
+/Users/igornesrallaribeiro/Documents/Projetos/Apps/ABImbev/backend/obj/Debug/docker-compose.dcproj.CoreCompileInputs.cache
