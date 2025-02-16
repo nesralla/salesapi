@@ -474,3 +474,14 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/```
+
+# Ignorar todas as pastas de compilação e objetos
+**/bin/
+**/obj/
+
+# Ignorar arquivos específicos gerados na compilação
+*.dll
+*.pdb
+*.cache
+*.sourcelink.json
+*.AssemblyInfo.cs
