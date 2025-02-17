@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Ambev.DeveloperEvaluation.Domain.Common;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities
@@ -17,6 +18,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Discount { get; set; }
+        [NotMapped]
         public decimal TotalItemAmount => (UnitPrice * Quantity) - Discount;
         public bool IsCancelled { get; set; }
     }

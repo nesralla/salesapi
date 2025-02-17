@@ -14,7 +14,7 @@ namespace Ambev.DeveloperEvaluation.ORM.Mapping
             builder.Property(si => si.Quantity).IsRequired();
             builder.Property(si => si.UnitPrice).HasColumnType("decimal(18,2)");
             builder.Property(si => si.Discount).HasColumnType("decimal(18,2)");
-            builder.Property(si => si.TotalItemAmount).HasColumnType("decimal(18,2)");
+            builder.Ignore(si => si.TotalItemAmount);
 
             builder.HasOne(si => si.Sale).WithMany(s => s.Items).HasForeignKey(si => si.SaleId);
             builder.HasOne(si => si.Product).WithMany().HasForeignKey(si => si.ProductId);
