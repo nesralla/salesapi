@@ -12,6 +12,12 @@ public class InfrastructureModuleInitializer : IModuleInitializer
 {
     public void Initialize(WebApplicationBuilder builder)
     {
+
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+        builder.Services.AddDbContext<DefaultContext>(options =>
+            options.UseNpgsql(connectionString));
+
         builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<DefaultContext>());
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IBranchRepository, BranchRepository>();
