@@ -1,4 +1,4 @@
-namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSale
+namespace Ambev.DeveloperEvaluation.Application.Sales.CancelSale
 {
 
     /// <summary>
@@ -9,4 +9,5 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSale
         public Guid Id { get; set; }
         public bool IsCancelled { get; set; }
     }
+
 }

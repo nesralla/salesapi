@@ -11,6 +11,9 @@ using Ambev.DeveloperEvaluation.Application.Users.DeleteUser;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSaleItem;
+using Ambev.DeveloperEvaluation.Application.SaleItens.CancelSaleItem;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -120,5 +123,53 @@ public class SalesController : BaseController
             Success = true,
             Message = "Sale deleted successfully"
         });
+    }
+    /// <summary>
+    /// Cancel a sale
+    /// </summary>
+    [HttpPost("{id}/cancel")]
+    public async Task<IActionResult> CancelSale([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var command = new CancelSaleCommand { SaleId = id };
+        var validator = new CancelSaleValidator();
+        var validationResult = await validator.ValidateAsync(command, cancellationToken);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Cancel and remove an item from a sale
+    /// </summary>
+    /// <param name="saleId">ID sale</param>
+    /// <param name="itemId">ID sale item</param>
+    /// <param name="request">Data of request </param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Sale Details  after</returns>
+    [HttpPost("{saleId}/items/{itemId}/cancel")]
+    public async Task<IActionResult> CancelSaleItem(
+        [FromRoute] Guid saleId,
+        [FromRoute] Guid itemId,
+        [FromBody] CancelSaleItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validator = new CancelSaleItemRequestValidator();
+        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
+
+        var command = new CancelSaleItemCommand
+        {
+            SaleId = saleId,
+            ItemId = itemId,
+            QuantityToRemove = request.QuantityToRemove,
+            CancelItem = request.CancelItem
+        };
+
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(_mapper.Map<CancelSaleItemResponse>(result));
     }
 }
