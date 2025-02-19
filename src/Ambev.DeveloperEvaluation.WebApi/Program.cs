@@ -8,6 +8,7 @@ using Ambev.DeveloperEvaluation.ORM;
 using Ambev.DeveloperEvaluation.WebApi.Middleware;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Serilog;
 
 namespace Ambev.DeveloperEvaluation.WebApi;
@@ -27,7 +28,26 @@ public class Program
             builder.Services.AddEndpointsApiExplorer();
 
             builder.AddBasicHealthChecks();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+                                            {
+                                                c.SwaggerDoc("v1", new OpenApiInfo
+                                                {
+                                                    Title = "Ambev Developer Evaluation API",
+                                                    Version = "v1",
+                                                    Description = "API para gerenciamento de vendas e operações associadas",
+                                                    Contact = new OpenApiContact
+                                                    {
+                                                        Name = "Suporte Ambev",
+                                                        Email = "suporte@ambev.com",
+                                                        Url = new Uri("https://ambev.com")
+                                                    }
+                                                });
+
+
+                                                var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                                                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                                                c.IncludeXmlComments(xmlPath);
+                                            });
 
             builder.Services.AddDbContext<DefaultContext>(options =>
                 options.UseNpgsql(
@@ -58,7 +78,11 @@ public class Program
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                                {
+                                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Ambev Developer Evaluation API v1");
+                                    c.RoutePrefix = string.Empty; // Habilita a interface Swagger na raiz do projeto
+                                });
             }
 
             app.UseHttpsRedirection();
