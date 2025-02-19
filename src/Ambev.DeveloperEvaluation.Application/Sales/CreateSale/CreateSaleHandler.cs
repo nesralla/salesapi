@@ -3,6 +3,7 @@ using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
 {
@@ -10,21 +11,32 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<CreateSaleHandler> _logger;
 
-        public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+
+        public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<CreateSaleHandler> logger)
         {
             _saleRepository = saleRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<SaleResult> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Recebida solicitação para criar uma nova venda");
+
             var validator = new CreateSaleValidator();
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
-                throw new ValidationException(validationResult.ToString());
+            {
+                _logger.LogWarning("Validação falhou para a criação da venda: {ValidationErrors}", validationResult.ToString());
 
-            // Aplicar regras de desconto
+                throw new ValidationException(validationResult.ToString());
+            }
+
+
+            _logger.LogInformation("Aplicando regras de desconto para os itens da venda");
+
             foreach (var item in request.Items)
             {
                 if (item.Quantity >= 4 && item.Quantity < 10)
@@ -44,8 +56,10 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
                 Items = request.Items,
                 IsCancelled = false
             };
-
+            _logger.LogInformation("Criando venda no banco de dados");
             var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
+            _logger.LogInformation("Venda {SaleNumber} criada com sucesso", createdSale.SaleNumber);
+
             return _mapper.Map<SaleResult>(createdSale);
         }
     }
