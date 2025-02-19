@@ -2,18 +2,18 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using Ambev.DeveloperEvaluation.WebApi.Common;
-using Ambev.DeveloperEvaluation.WebApi.Features.Users.CreateUser;
 using Ambev.DeveloperEvaluation.WebApi.Features.Users.GetUser;
 using Ambev.DeveloperEvaluation.WebApi.Features.Users.DeleteUser;
-using Ambev.DeveloperEvaluation.Application.Users.CreateUser;
 using Ambev.DeveloperEvaluation.Application.Users.GetUser;
 using Ambev.DeveloperEvaluation.Application.Users.DeleteUser;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
-using FluentValidation;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CancelSaleItem;
 using Ambev.DeveloperEvaluation.Application.SaleItens.CancelSaleItem;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales;
 
@@ -27,15 +27,19 @@ public class SalesController : BaseController
     private readonly IMediator _mediator;
     private readonly IMapper _mapper;
 
+    private readonly ILogger<SalesController> _logger;
+
     /// <summary>
     /// Initializes a new instance of SalesController
     /// </summary>
     /// <param name="mediator">The mediator instance</param>
     /// <param name="mapper">The AutoMapper instance</param>
-    public SalesController(IMediator mediator, IMapper mapper)
+    /// /// <param name="loggerr">The logger instance</param>
+    public SalesController(IMediator mediator, IMapper mapper, ILogger<SalesController> logger)
     {
         _mediator = mediator;
         _mapper = mapper;
+        _logger = logger;
     }
 
     /// <summary>
@@ -49,21 +53,18 @@ public class SalesController : BaseController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Recebida solicitação para criar uma venda");
         var validator = new CreateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
-
         if (!validationResult.IsValid)
+        {
+            _logger.LogWarning("Validação falhou ao criar venda: {Errors}", validationResult.ToString());
             return BadRequest(validationResult.Errors);
-
+        }
         var command = _mapper.Map<CreateSaleCommand>(request);
         var response = await _mediator.Send(command, cancellationToken);
-
-        return Created(string.Empty, new ApiResponseWithData<CreateSaleResponse>
-        {
-            Success = true,
-            Message = "Sale created successfully",
-            Data = _mapper.Map<CreateSaleResponse>(response)
-        });
+        _logger.LogInformation("Venda criada com sucesso");
+        return Created(string.Empty, response);
     }
 
     /// <summary>
@@ -106,23 +107,25 @@ public class SalesController : BaseController
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteSale([FromRoute] Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteSale(
+        [FromRoute] Guid saleId,
+        CancellationToken cancellationToken)
     {
-        var request = new DeleteUserRequest { Id = id };
-        var validator = new DeleteUserRequestValidator();
-        var validationResult = await validator.ValidateAsync(request, cancellationToken);
+        _logger.LogInformation("Recebida solicitação para deletar a venda {SaleId}", saleId);
 
+        var command = new DeleteSaleCommand { SaleId = saleId };
+        var validator = new DeleteSaleValidator();
+        var validationResult = await validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
-
-        var command = _mapper.Map<DeleteUserCommand>(request.Id);
-        await _mediator.Send(command, cancellationToken);
-
-        return Ok(new ApiResponse
         {
-            Success = true,
-            Message = "Sale deleted successfully"
-        });
+            _logger.LogWarning("Validação falhou para deletar a venda {SaleId}: {Errors}", saleId, validationResult.ToString());
+            return BadRequest(validationResult.Errors);
+        }
+
+        var result = await _mediator.Send(command, cancellationToken);
+        _logger.LogInformation("Venda {SaleId} deletada com sucesso", saleId);
+
+        return Ok(result);
     }
     /// <summary>
     /// Cancel a sale
@@ -130,14 +133,10 @@ public class SalesController : BaseController
     [HttpPost("{id}/cancel")]
     public async Task<IActionResult> CancelSale([FromRoute] Guid id, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Recebida solicitação para cancelar a venda {SaleId}", id);
         var command = new CancelSaleCommand { SaleId = id };
-        var validator = new CancelSaleValidator();
-        var validationResult = await validator.ValidateAsync(command, cancellationToken);
-        if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
-
         var result = await _mediator.Send(command, cancellationToken);
-
+        _logger.LogInformation("Venda {SaleId} cancelada com sucesso", id);
         return Ok(result);
     }
 
@@ -156,20 +155,49 @@ public class SalesController : BaseController
         [FromBody] CancelSaleItemRequest request,
         CancellationToken cancellationToken)
     {
-        var validator = new CancelSaleItemRequestValidator();
+        _logger.LogInformation("Recebida solicitação para cancelar/remover item {ItemId} da venda {SaleId}", itemId, saleId);
+        var command = new CancelSaleItemCommand { SaleId = saleId, ItemId = itemId, QuantityToRemove = request.QuantityToRemove, CancelItem = request.CancelItem };
+        var result = await _mediator.Send(command, cancellationToken);
+        _logger.LogInformation("Item {ItemId} da venda {SaleId} processado com sucesso", itemId, saleId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Atualiza uma venda existente
+    /// </summary>
+    [HttpPut("{saleId}")]
+    public async Task<IActionResult> UpdateSale(
+        [FromRoute] Guid saleId,
+        [FromBody] UpdateSaleRequest request,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Recebida solicitação para atualizar a venda {SaleId}", saleId);
+
+        if (saleId != request.SaleId)
+        {
+            _logger.LogWarning("O ID da venda na rota ({SaleId}) não corresponde ao ID no corpo da requisição ({RequestSaleId})", saleId, request.SaleId);
+            return BadRequest("Mismatched Sale ID");
+        }
+
+        var validator = new UpdateSaleRequestValidator();
         var validationResult = await validator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-            return BadRequest(validationResult.Errors);
-
-        var command = new CancelSaleItemCommand
         {
-            SaleId = saleId,
-            ItemId = itemId,
-            QuantityToRemove = request.QuantityToRemove,
-            CancelItem = request.CancelItem
+            _logger.LogWarning("Validação falhou para a atualização da venda {SaleId}: {Errors}", saleId, validationResult.ToString());
+            return BadRequest(validationResult.Errors);
+        }
+
+        var command = new UpdateSaleCommand
+        {
+            SaleId = request.SaleId,
+            CustomerId = request.CustomerId,
+            BranchId = request.BranchId,
+            Items = request.Items
         };
 
         var result = await _mediator.Send(command, cancellationToken);
-        return Ok(_mapper.Map<CancelSaleItemResponse>(result));
+        _logger.LogInformation("Venda {SaleId} atualizada com sucesso", saleId);
+
+        return Ok(result);
     }
 }
