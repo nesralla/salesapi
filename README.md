@@ -55,31 +55,137 @@ These business rules define quantity-based discounting tiers and limitations:
    - Maximum limit: 20 items per product
    - No discounts allowed for quantities below 4 items
 
-## Overview
-This section provides a high-level overview of the project and the various skills and competencies it aims to assess for developer candidates. 
+Developer Evaluation API Documentation
 
-See [Overview](/.doc/overview.md)
+📌 Overview
 
-## Tech Stack
-This section lists the key technologies used in the project, including the backend, testing, frontend, and database components. 
+This API manages sales records following the DDD architecture and implements a complete CRUD.
 
-See [Tech Stack](/.doc/tech-stack.md)
+🔧 Tech Stack
 
-## Frameworks
-This section outlines the frameworks and libraries that are leveraged in the project to enhance development productivity and maintainability. 
+.NET 8 (ASP.NET Core Web API)
 
-See [Frameworks](/.doc/frameworks.md)
+PostgreSQL (Database)
 
-<!-- ## API Structure
-This section includes links to the detailed documentation for the different API resources:
+Redis (Caching)
 
-- [API General](./docs/general-api.md)
-- [Products API](/.doc/products-api.md)
-- [Carts API](/.doc/carts-api.md)
-- [Users API](/.doc/users-api.md)
-- [Auth API](/.doc/auth-api.md) -->
+Kafka (Event Streaming)
 
-## Project Structure
-This section describes the overall structure and organization of the project files and directories. 
+FluentValidation (Request validation)
 
-See [Project Structure](/.doc/project-structure.md)
+MediatR (CQRS pattern)
+
+Swagger (API Documentation)
+
+Docker & Docker Compose (Containerized environment)
+
+📂 Project Structure
+
+backend/
+ ├── src/
+ │   ├── Ambev.DeveloperEvaluation.WebApi/ (API Layer)
+ │   ├── Ambev.DeveloperEvaluation.Application/ (Application Layer - Use Cases)
+ │   ├── Ambev.DeveloperEvaluation.Domain/ (Domain Layer - Entities & Repositories)
+ │   ├── Ambev.DeveloperEvaluation.Infrastructure/ (ORM, Migrations, DB Access)
+ │   ├── Ambev.DeveloperEvaluation.IoC/ (Dependency Injection)
+ │   ├── Ambev.DeveloperEvaluation.Tests/ (Unit & Integration Tests)
+ ├── docker-compose.yml (Infrastructure Services)
+ ├── README.md (Documentation)
+
+📜 API Endpoints
+
+**Sales API (/api/sales)
+
+Method
+
+Endpoint
+
+Description
+
+POST
+
+/api/sales
+
+Create a new sale
+
+GET
+
+/api/sales/{id}
+
+Retrieve sale details
+
+PUT
+
+/api/sales/{id}
+
+Update an existing sale
+
+DELETE
+
+/api/sales/{id}
+
+Delete a sale
+
+POST
+
+/api/sales/{id}/cancel
+
+Cancel a sale
+
+POST
+
+/api/sales/{saleId}/items/{itemId}/cancel
+
+Remove or cancel a sale item
+
+🚀 Running the Project
+
+1️⃣ Prerequisites
+
+Ensure you have installed:
+
+Docker & Docker Compose
+
+.NET 8 SDK
+
+2️⃣ Running Services
+
+Start the database, Redis, and Kafka with:
+
+docker-compose up -d
+
+3️⃣ Running the API
+
+dotnet run --project src/Ambev.DeveloperEvaluation.WebApi
+
+4️⃣ Accessing Swagger
+
+The API documentation is available at:
+
+<http://localhost:5000/swagger>
+
+📌 Environment Configuration (appsettings.json)
+
+Key
+
+Description
+
+ConnectionStrings:Pcastgres
+
+PostgreSQL database connection
+
+Redis:Host
+
+Redis cache server
+
+Kafka:BootstrapServers
+
+Kafka broker connection
+
+📌 Running Tests
+
+To execute unit tests, run:
+
+dotnet test
+
+📌 Now your API is fully documented! 🚀 If you have any questions or need enhancements, let me know! 😃

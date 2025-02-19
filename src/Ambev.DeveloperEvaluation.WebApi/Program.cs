@@ -86,7 +86,7 @@ public class Program
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseDefaultLogging();
             app.UseBasicHealthChecks();
 
             app.MapControllers();
