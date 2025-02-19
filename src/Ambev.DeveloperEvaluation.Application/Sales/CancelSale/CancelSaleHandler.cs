@@ -8,7 +8,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CancelSale
     /// <summary>
     /// Handler para cancelar uma venda
     /// </summary>
-    public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, CancelSaleResponse>
+    public class CancelSaleHandler : IRequestHandler<CancelSaleCommand, CancelSaleResult>
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
@@ -21,7 +21,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CancelSale
             _logger = logger;
         }
 
-        public async Task<CancelSaleResponse> Handle(CancelSaleCommand request, CancellationToken cancellationToken)
+        public async Task<CancelSaleResult> Handle(CancelSaleCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Recebida solicitação para cancelar a venda {SaleId}", request.SaleId);
 
@@ -42,7 +42,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CancelSale
             await _saleRepository.UpdateAsync(sale, cancellationToken);
 
             _logger.LogInformation("Venda {SaleId} cancelada com sucesso", request.SaleId);
-            return _mapper.Map<CancelSaleResponse>(sale);
+            return _mapper.Map<CancelSaleResult>(sale);
         }
     }
 
