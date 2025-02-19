@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.SaleItens.CancelSaleItem
 {
@@ -11,15 +12,21 @@ namespace Ambev.DeveloperEvaluation.Application.SaleItens.CancelSaleItem
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<CancelSaleItemHandler> _logger;
 
-        public CancelSaleItemHandler(ISaleRepository saleRepository, IMapper mapper)
+
+        public CancelSaleItemHandler(ISaleRepository saleRepository, IMapper mapper, ILogger<CancelSaleItemHandler> logger)
         {
             _saleRepository = saleRepository;
             _mapper = mapper;
+            _logger = logger;
         }
+
 
         public async Task<CancelSaleItemResult> Handle(CancelSaleItemCommand request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Processando solicitação para remover/cancelar item {ItemId} da venda {SaleId}", request.ItemId, request.SaleId);
+
             var sale = await _saleRepository.GetByIdAsync(request.SaleId, cancellationToken);
             if (sale == null)
                 throw new KeyNotFoundException($"Sale with ID {request.SaleId} not found");
@@ -31,22 +38,29 @@ namespace Ambev.DeveloperEvaluation.Application.SaleItens.CancelSaleItem
             if (request.CancelItem)
             {
                 item.IsCancelled = true;
+                _logger.LogInformation("Item {ItemId} foi cancelado na venda {SaleId}", request.ItemId, request.SaleId);
+
             }
             else if (request.QuantityToRemove.HasValue)
             {
                 if (request.QuantityToRemove.Value >= item.Quantity)
                 {
                     sale.Items.Remove(item);
+                    _logger.LogInformation("Item {ItemId} foi removido completamente da venda {SaleId}", request.ItemId, request.SaleId);
+
                 }
                 else
                 {
                     item.Quantity -= request.QuantityToRemove.Value;
                     item.Discount = (item.Quantity >= 4 && item.Quantity < 10) ? item.UnitPrice * item.Quantity * 0.10m :
                                     (item.Quantity >= 10 && item.Quantity <= 20) ? item.UnitPrice * item.Quantity * 0.20m : 0;
+                    _logger.LogInformation("Quantidade do item {ItemId} reduzida para {NewQuantity}. Novo desconto: {NewDiscount}",
+                        request.ItemId, item.Quantity, item.Discount);
                 }
             }
 
             await _saleRepository.UpdateAsync(sale, cancellationToken);
+            _logger.LogInformation("Venda {SaleId} atualizada após remoção/cancelamento do item {ItemId}", request.SaleId, request.ItemId);
 
             return new CancelSaleItemResult
             {
