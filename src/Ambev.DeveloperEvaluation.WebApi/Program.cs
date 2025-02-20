@@ -19,32 +19,28 @@ public class Program
     {
         try
         {
-            Log.Information("Starting web application");
+
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
-            builder.AddDefaultLogging();
+            // Configuração do Serilog
+            builder.Host.UseSerilog((ctx, lc) => lc
+                .WriteTo.Console()
+                .ReadFrom.Configuration(ctx.Configuration));
 
+            // Configurações do IoC (Injeção de Dependências)
+
+
+            builder.AddDefaultLogging();
+            builder.AddBasicHealthChecks();
+
+            builder.RegisterDependencies();
             builder.Services.AddControllers();
+
+
             builder.Services.AddEndpointsApiExplorer();
 
-            builder.AddBasicHealthChecks();
-            builder.Services.AddSwaggerGen(c =>
-                                            {
-                                                c.SwaggerDoc("v1", new OpenApiInfo
-                                                {
-                                                    Title = "Ambev Developer Evaluation API",
-                                                    Version = "v1",
-                                                    Description = "API para gerenciamento de vendas e operações associadas",
-                                                    Contact = new OpenApiContact
-                                                    {
-                                                        Name = "Suporte Ambev",
-                                                        Email = "suporte@ambev.com",
-                                                        Url = new Uri("https://ambev.com")
-                                                    }
-                                                });
 
-
-                                            });
+            builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<DefaultContext>(options =>
                 options.UseNpgsql(
@@ -53,19 +49,13 @@ public class Program
                 )
             );
 
-            builder.Services.AddJwtAuthentication(builder.Configuration);
+            /// builder.Services.AddJwtAuthentication(builder.Configuration);
 
-            builder.RegisterDependencies();
+
 
             builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(ApplicationLayer).Assembly);
 
-            builder.Services.AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssemblies(
-                    typeof(ApplicationLayer).Assembly,
-                    typeof(Program).Assembly
-                );
-            });
+
 
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
@@ -83,13 +73,11 @@ public class Program
             }
 
             app.UseHttpsRedirection();
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseDefaultLogging();
-            app.UseBasicHealthChecks();
-
+            // app.UseAuthentication();
+            // app.UseAuthorization();
             app.MapControllers();
+
+            Log.Information("Starting web application");
 
             app.Run();
         }

@@ -27,10 +27,10 @@ namespace Ambev.DeveloperEvaluation.IoC.ModuleInitializers
             });
 
 
-            var jwtSecret = builder.Configuration["Jwt:Secret"];
+            var jwtSecret = builder.Configuration["Jwt:SecretKey"];
             if (string.IsNullOrEmpty(jwtSecret))
             {
-                throw new ArgumentNullException("Jwt:Secret", "JWT secret cannot be null or empty.");
+                throw new ArgumentNullException("Jwt:SecretKey", "JWT secret cannot be null or empty.");
             }
             var key = Encoding.ASCII.GetBytes(jwtSecret);
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

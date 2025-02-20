@@ -6,7 +6,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
 {/// <summary>
  /// Command para criar uma venda
  /// </summary>
-    public record CreateSaleCommand : IRequest<SaleResult>
+    public class CreateSaleCommand : IRequest<CreateSaleResult>
     {
         public List<SaleItem> Items { get; init; }
         public Guid CustomerId { get; init; }

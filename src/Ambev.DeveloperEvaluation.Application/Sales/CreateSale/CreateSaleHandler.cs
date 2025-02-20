@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
 {
-    public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, SaleResult>
+    public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleResult>
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IMapper _mapper;
@@ -21,7 +21,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
             _logger = logger;
         }
 
-        public async Task<SaleResult> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
+        public async Task<CreateSaleResult> Handle(CreateSaleCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Recebida solicitação para criar uma nova venda");
 
@@ -60,7 +60,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale
             var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
             _logger.LogInformation("Venda {SaleNumber} criada com sucesso", createdSale.SaleNumber);
 
-            return _mapper.Map<SaleResult>(createdSale);
+            return _mapper.Map<CreateSaleResult>(createdSale);
         }
     }
 

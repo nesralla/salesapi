@@ -39,8 +39,8 @@ namespace Ambev.DeveloperEvaluation.Unit.Application
 
             _saleRepositoryMock.Setup(repo => repo.CreateAsync(It.IsAny<Sale>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(sale);
-            _mapperMock.Setup(mapper => mapper.Map<SaleResult>(It.IsAny<Sale>()))
-                .Returns(new SaleResult { Id = sale.Id, SaleNumber = sale.SaleNumber });
+            _mapperMock.Setup(mapper => mapper.Map<CreateSaleResult>(It.IsAny<Sale>()))
+                .Returns(new CreateSaleResult { Id = sale.Id, SaleNumber = sale.SaleNumber });
 
             // Act
             var result = await _handler.Handle(request, CancellationToken.None);

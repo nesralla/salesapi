@@ -19,12 +19,7 @@ public class InfrastructureModuleInitializer : IModuleInitializer
             options.UseNpgsql(connectionString));
 
         builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<DefaultContext>());
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<IBranchRepository, BranchRepository>();
-        builder.Services.AddScoped<ISaleItemRepository, SaleItemRepository>();
-        builder.Services.AddScoped<ISaleRepository, SaleRepository>();
-        builder.Services.AddScoped<IProductRepository, ProductRepository>();
-        builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+
 
     }
 }
